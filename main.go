@@ -14,7 +14,7 @@ func main() {
 	configs.ConnectDB()
 
 	//routes
-	routes.UserRoute(router)
+	routes.CustomerRoute(router)
 	routes.ProductRoute(router)
 
 	router.Run("localhost:6000")
