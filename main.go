@@ -15,6 +15,7 @@ func main() {
 
 	//routes
 	routes.UserRoute(router)
+	routes.ProductRoute(router)
 
 	router.Run("localhost:6000")
 }
