@@ -44,8 +44,6 @@ func CreateCustomer() gin.HandlerFunc {
 			Village:  customer.Village,
 			Thana:    customer.Thana,
 			District: customer.District,
-			Paid:     customer.Paid,
-			Due:      customer.Due,
 			Phone:    customer.Phone,
 			Email:    customer.Email,
 		}
@@ -106,8 +104,6 @@ func EditACustomer() gin.HandlerFunc {
 			"village":  customer.Village,
 			"thana":    customer.Thana,
 			"district": customer.District,
-			"paid":     customer.Paid,
-			"due":      customer.Due,
 			"phone":    customer.Phone,
 			"email":    customer.Email,
 		}

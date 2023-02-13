@@ -37,16 +37,16 @@ func CreateProduct() gin.HandlerFunc {
 		}
 
 		newProduct := models.Product{
-			Id:           primitive.NewObjectID(),
-			Model:        product.Model,
-			Price:        product.Price,
-			Cost:         product.Cost,
-			Description:  product.Description,
-			Category:     product.Category,
-			ImageURL:     product.ImageURL,
-			Stock:        product.Stock,
-			Brand:        product.Brand,
-			Organization: product.Organization,
+			Id:          primitive.NewObjectID(),
+			Model:       product.Model,
+			Price:       product.Price,
+			Cost:        product.Cost,
+			Description: product.Description,
+			Category:    product.Category,
+			ImageURL:    product.ImageURL,
+			Stock:       product.Stock,
+			Brand:       product.Brand,
+			Seller_id:   product.Seller_id,
 		}
 
 		result, err := productCollection.InsertOne(ctx, newProduct)
@@ -99,15 +99,15 @@ func EditAProduct() gin.HandlerFunc {
 		}
 
 		update := bson.M{
-			"category":     product.Category,
-			"brand":        product.Brand,
-			"cost":         product.Cost,
-			"description":  product.Description,
-			"image_url":    product.ImageURL,
-			"model":        product.Model,
-			"price":        product.Price,
-			"stock":        product.Stock,
-			"organization": product.Organization,
+			"category":    product.Category,
+			"brand":       product.Brand,
+			"cost":        product.Cost,
+			"description": product.Description,
+			"image_url":   product.ImageURL,
+			"model":       product.Model,
+			"price":       product.Price,
+			"stock":       product.Stock,
+			"seller_id":   product.Seller_id,
 		}
 		result, err := productCollection.UpdateOne(ctx, bson.M{"id": objId}, bson.M{"$set": update})
 		if err != nil {
