@@ -13,4 +13,5 @@ type Customer struct {
 	Paid     int                `json:"paid,omitempty"`
 	Due      int                `json:"due,omitempty"`
 	Phone    int                `json:"phone,omitempty" validate:"required"`
+	Email    string             `json:"email,omitempty"`
 }
