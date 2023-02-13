@@ -12,4 +12,5 @@ type Customer struct {
 	District string             `json:"district,omitempty" validate:"required"`
 	Paid     int                `json:"paid,omitempty"`
 	Due      int                `json:"due,omitempty"`
+	Phone    int                `json:"phone,omitempty" validate:"required"`
 }
