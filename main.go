@@ -14,6 +14,8 @@ func main() {
 	configs.ConnectDB()
 
 	//routes
+	routes.HistoryRoute(router)
+	routes.SellsRoute(router)
 	routes.CustomerRoute(router)
 	routes.ProductRoute(router)
 
