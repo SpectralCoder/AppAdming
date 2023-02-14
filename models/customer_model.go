@@ -12,4 +12,5 @@ type Customer struct {
 	District string             `json:"district,omitempty" validate:"required"`
 	Phone    int                `json:"phone,omitempty" validate:"required"`
 	Email    string             `json:"email,omitempty"`
+	DueDate  primitive.DateTime `json:"dueDate,omitempty"`
 }

@@ -46,6 +46,7 @@ func CreateCustomer() gin.HandlerFunc {
 			District: customer.District,
 			Phone:    customer.Phone,
 			Email:    customer.Email,
+			DueDate:  customer.DueDate,
 		}
 
 		result, err := customerCollection.InsertOne(ctx, newCustomer)
@@ -106,6 +107,7 @@ func EditACustomer() gin.HandlerFunc {
 			"district": customer.District,
 			"phone":    customer.Phone,
 			"email":    customer.Email,
+			"dueDate":  customer.DueDate,
 		}
 		result, err := customerCollection.UpdateOne(ctx, bson.M{"id": objId}, bson.M{"$set": update})
 		if err != nil {
