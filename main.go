@@ -19,5 +19,8 @@ func main() {
 	routes.CustomerRoute(router)
 	routes.ProductRoute(router)
 
-	router.Run("localhost:6000")
+	err := router.Run(":6000")
+	if err != nil {
+		panic("[Error] failed to start Gin server due to: " + err.Error())
+	}
 }
