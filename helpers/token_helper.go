@@ -21,7 +21,6 @@ type SignedDetails struct {
 	First_name string
 	Last_name  string
 	Uid        string
-	User_type  string
 	jwt.StandardClaims
 }
 
@@ -42,6 +41,10 @@ func GenerateAllTokens(email string, firstName string, lastName string, uid stri
 	}
 
 	refreshClaims := &SignedDetails{
+		Email:      email,
+		First_name: firstName,
+		Last_name:  lastName,
+		Uid:        uid,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(168)).Unix(),
 		},
@@ -79,7 +82,6 @@ func ValidateToken(signedToken string) (claims *SignedDetails, msg string) {
 		msg = err.Error()
 		return
 	}
-
 	if claims.ExpiresAt < time.Now().Local().Unix() {
 		msg = fmt.Sprintf("token is expired")
 		msg = err.Error()

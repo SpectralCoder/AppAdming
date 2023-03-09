@@ -86,7 +86,7 @@ func SignUp() gin.HandlerFunc {
 		}
 
 		if count > 0 {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "this email or phone number already exists"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "this email or phone number already exists"})
 			return
 		}
 
@@ -152,6 +152,35 @@ func Login() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, foundUser)
+
+	}
+}
+
+func Refresh() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		var user models.User
+		clientToken := c.Request.Header.Get("refresh_token")
+		if clientToken == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("No Authorization header provided")})
+			c.Abort()
+			return
+		}
+
+		claims, err := helper.ValidateToken(clientToken)
+		if err != "" {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+			c.Abort()
+			return
+		}
+		userID := &claims.Email
+		fmt.Println(userID)
+		token, refreshToken, _ := helper.GenerateAllTokens(claims.Email, claims.First_name, claims.Last_name, claims.Uid)
+
+		helper.UpdateAllTokens(token, refreshToken, claims.Uid)
+		userCollection.FindOne(ctx, bson.M{"user_id": claims.Uid}).Decode(&user)
+		defer cancel()
+		c.JSON(http.StatusOK, user)
 
 	}
 }
