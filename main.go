@@ -6,6 +6,7 @@ import (
 	"appadming/routes"
 	"fmt"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,6 +17,11 @@ func main() {
 	configs.ConnectDB()
 
 	router.Use(gin.Logger())
+	// Add CORS middleware
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"http://localhost:5432"} // Replace with the allowed origins
+	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
+	router.Use(cors.New(config))
 
 	routes.AuthRoutes(router)
 	router.Use(middleware.Authentication())
@@ -44,7 +50,7 @@ func main() {
 	routes.CustomerRoute(router)
 	routes.ProductRoute(router)
 
-	err := router.Run(":6000")
+	err := router.Run("0.0.0.0:9000")
 	if err != nil {
 		panic("[Error] failed to start Gin server due to: " + err.Error())
 	}
