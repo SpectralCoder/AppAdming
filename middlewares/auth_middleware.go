@@ -12,8 +12,8 @@ import (
 // Authz validates token and authorizes users
 func Authentication() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		clientToken := c.Request.Header.Get("token")
-		if clientToken == "" {
+		clientToken, err1 := c.Cookie("access_token")
+		if err1 != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("No Authorization header provided")})
 			c.Abort()
 			return

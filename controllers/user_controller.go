@@ -54,6 +54,7 @@ func SignUp() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		var user models.User
+		var userResponse models.UserResponse
 
 		if err := c.BindJSON(&user); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -98,15 +99,37 @@ func SignUp() gin.HandlerFunc {
 		user.Token = &token
 		user.Refresh_token = &refreshToken
 
-		resultInsertionNumber, insertErr := userCollection.InsertOne(ctx, user)
+		_, insertErr := userCollection.InsertOne(ctx, user)
 		if insertErr != nil {
 			msg := fmt.Sprintf("User item was not created")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
 			return
 		}
 		defer cancel()
+		userResponse.Name = user.Name
+		userResponse.Email = user.Email
 
-		c.JSON(http.StatusOK, resultInsertionNumber)
+		c.SetCookie(
+			"access_token",
+			token,
+			3600,
+			"",
+			"",
+			false,
+			true,
+		)
+
+		c.SetCookie(
+			"refresh_token",
+			refreshToken,
+			3600*24*7,
+			"",
+			"",
+			false,
+			true,
+		)
+
+		c.JSON(http.StatusOK, userResponse)
 
 	}
 }
@@ -117,6 +140,7 @@ func Login() gin.HandlerFunc {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		var user models.User
 		var foundUser models.User
+		var userResponse models.UserResponse
 
 		if err := c.BindJSON(&user); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -150,9 +174,30 @@ func Login() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+		userResponse.Name = foundUser.Name
+		userResponse.Email = foundUser.Email
 
-		c.JSON(http.StatusOK, foundUser)
+		c.SetCookie(
+			"access_token",
+			token,
+			3600,
+			"",
+			"",
+			false,
+			true,
+		)
 
+		c.SetCookie(
+			"refresh_token",
+			refreshToken,
+			3600*24*7,
+			"",
+			"",
+			false,
+			true,
+		)
+
+		c.JSON(http.StatusOK, userResponse)
 	}
 }
 
@@ -160,8 +205,8 @@ func Refresh() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		var user models.User
-		clientToken := c.Request.Header.Get("refresh_token")
-		if clientToken == "" {
+		clientToken, erro := c.Cookie("refresh_token")
+		if erro != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("No Authorization header provided")})
 			c.Abort()
 			return
@@ -175,11 +220,20 @@ func Refresh() gin.HandlerFunc {
 		}
 		userID := &claims.Email
 		fmt.Println(userID)
-		token, refreshToken, _ := helper.GenerateAllTokens(claims.Email, claims.Name, claims.Uid)
+		token, _, _ := helper.GenerateAllTokens(claims.Email, claims.Name, claims.Uid)
 
-		helper.UpdateAllTokens(token, refreshToken, claims.Uid)
+		helper.UpdateAllTokens(token, clientToken, claims.Uid)
 		userCollection.FindOne(ctx, bson.M{"user_id": claims.Uid}).Decode(&user)
 		defer cancel()
+		c.SetCookie(
+			"access_token",
+			token,
+			3600,
+			"",
+			"",
+			false,
+			true,
+		)
 		c.JSON(http.StatusOK, user)
 
 	}
