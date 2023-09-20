@@ -19,8 +19,9 @@ func main() {
 	router.Use(gin.Logger())
 	// Add CORS middleware
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:5432"} // Replace with the allowed origins
+	config.AllowOrigins = []string{"http://localhost:5432", "http://127.0.0.1:5432", "http://192.168.1.11:5432"} // Replace with the allowed origins
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
+	config.AllowCredentials = true
 	router.Use(cors.New(config))
 
 	routes.AuthRoutes(router)
@@ -36,13 +37,13 @@ func main() {
 	})
 
 	// API-1
-	router.GET("/api-2", func(c *gin.Context) {
+	router.GET("/isLoggedIn", func(c *gin.Context) {
 		email, exists := c.Get("email")
 		if !exists {
 			fmt.Println("not found")
 		}
 		fmt.Println(email)
-		c.JSON(200, gin.H{"success": "Access granted for api-2"})
+		c.JSON(200, gin.H{"success": "Access granted"})
 	})
 
 	routes.HistoryRoute(router)

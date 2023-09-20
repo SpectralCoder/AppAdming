@@ -113,7 +113,7 @@ func SignUp() gin.HandlerFunc {
 			"access_token",
 			token,
 			3600,
-			"",
+			"/",
 			"",
 			false,
 			true,
@@ -123,7 +123,7 @@ func SignUp() gin.HandlerFunc {
 			"refresh_token",
 			refreshToken,
 			3600*24*7,
-			"",
+			"/",
 			"",
 			false,
 			true,
@@ -137,6 +137,7 @@ func SignUp() gin.HandlerFunc {
 // Login is the api used to tget a single user
 func Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		fmt.Println(c.ClientIP())
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		var user models.User
 		var foundUser models.User
@@ -181,7 +182,7 @@ func Login() gin.HandlerFunc {
 			"access_token",
 			token,
 			3600,
-			"",
+			"/",
 			"",
 			false,
 			true,
@@ -191,7 +192,7 @@ func Login() gin.HandlerFunc {
 			"refresh_token",
 			refreshToken,
 			3600*24*7,
-			"",
+			"/",
 			"",
 			false,
 			true,
