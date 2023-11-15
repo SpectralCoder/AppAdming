@@ -109,26 +109,25 @@ func SignUp() gin.HandlerFunc {
 		userResponse.Name = user.Name
 		userResponse.Email = user.Email
 
-		c.SetCookie(
-			"access_token",
-			token,
-			3600,
-			"/",
-			"",
-			false,
-			true,
-		)
+		http.SetCookie(c.Writer, &http.Cookie{
+			Name:     "access_token",
+			Value:    token,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
+			MaxAge:   3600 * 24 * 2,
+		})
 
-		c.SetCookie(
-			"refresh_token",
-			refreshToken,
-			3600*24*7,
-			"/",
-			"",
-			false,
-			true,
-		)
-
+		http.SetCookie(c.Writer, &http.Cookie{
+			Name:     "refresh_token",
+			Value:    refreshToken,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
+			MaxAge:   3600 * 24 * 7,
+		})
 		c.JSON(http.StatusOK, userResponse)
 
 	}
@@ -178,25 +177,25 @@ func Login() gin.HandlerFunc {
 		userResponse.Name = foundUser.Name
 		userResponse.Email = foundUser.Email
 
-		c.SetCookie(
-			"access_token",
-			token,
-			3600,
-			"/",
-			"",
-			false,
-			true,
-		)
+		http.SetCookie(c.Writer, &http.Cookie{
+			Name:     "access_token",
+			Value:    token,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
+			MaxAge:   3600 * 24 * 2,
+		})
 
-		c.SetCookie(
-			"refresh_token",
-			refreshToken,
-			3600*24*7,
-			"/",
-			"",
-			false,
-			true,
-		)
+		http.SetCookie(c.Writer, &http.Cookie{
+			Name:     "refresh_token",
+			Value:    refreshToken,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
+			MaxAge:   3600 * 24 * 7,
+		})
 
 		c.JSON(http.StatusOK, userResponse)
 	}
@@ -226,15 +225,15 @@ func Refresh() gin.HandlerFunc {
 		helper.UpdateAllTokens(token, clientToken, claims.Uid)
 		userCollection.FindOne(ctx, bson.M{"user_id": claims.Uid}).Decode(&user)
 		defer cancel()
-		c.SetCookie(
-			"access_token",
-			token,
-			3600,
-			"",
-			"",
-			false,
-			true,
-		)
+		http.SetCookie(c.Writer, &http.Cookie{
+			Name:     "access_token",
+			Value:    token,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
+			MaxAge:   3600 * 24 * 2,
+		})
 		c.JSON(http.StatusOK, user)
 
 	}
