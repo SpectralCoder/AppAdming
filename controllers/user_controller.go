@@ -54,6 +54,7 @@ func SignUp() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		var user models.User
+		var userResponse models.UserResponse
 
 		if err := c.BindJSON(&user); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -86,7 +87,7 @@ func SignUp() gin.HandlerFunc {
 		}
 
 		if count > 0 {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "this email or phone number already exists"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "this email or phone number already exists"})
 			return
 		}
 
@@ -94,19 +95,40 @@ func SignUp() gin.HandlerFunc {
 		user.Updated_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 		user.ID = primitive.NewObjectID()
 		user.User_id = user.ID.Hex()
-		token, refreshToken, _ := helper.GenerateAllTokens(*user.Email, *user.First_name, *user.Last_name, *&user.User_id)
+		token, refreshToken, _ := helper.GenerateAllTokens(*user.Email, *user.Name, *&user.User_id)
 		user.Token = &token
 		user.Refresh_token = &refreshToken
 
-		resultInsertionNumber, insertErr := userCollection.InsertOne(ctx, user)
+		_, insertErr := userCollection.InsertOne(ctx, user)
 		if insertErr != nil {
 			msg := fmt.Sprintf("User item was not created")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
 			return
 		}
 		defer cancel()
+		userResponse.Name = user.Name
+		userResponse.Email = user.Email
 
-		c.JSON(http.StatusOK, resultInsertionNumber)
+		http.SetCookie(c.Writer, &http.Cookie{
+			Name:     "access_token",
+			Value:    token,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
+			MaxAge:   3600 * 24 * 2,
+		})
+
+		http.SetCookie(c.Writer, &http.Cookie{
+			Name:     "refresh_token",
+			Value:    refreshToken,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
+			MaxAge:   3600 * 24 * 7,
+		})
+		c.JSON(http.StatusOK, userResponse)
 
 	}
 }
@@ -114,9 +136,11 @@ func SignUp() gin.HandlerFunc {
 // Login is the api used to tget a single user
 func Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		fmt.Println(c.ClientIP())
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		var user models.User
 		var foundUser models.User
+		var userResponse models.UserResponse
 
 		if err := c.BindJSON(&user); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -141,7 +165,7 @@ func Login() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
 			return
 		}
-		token, refreshToken, _ := helper.GenerateAllTokens(*foundUser.Email, *foundUser.First_name, *foundUser.Last_name, foundUser.User_id)
+		token, refreshToken, _ := helper.GenerateAllTokens(*foundUser.Email, *foundUser.Name, foundUser.User_id)
 
 		helper.UpdateAllTokens(token, refreshToken, foundUser.User_id)
 		err = userCollection.FindOne(ctx, bson.M{"user_id": foundUser.User_id}).Decode(&foundUser)
@@ -150,8 +174,67 @@ func Login() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+		userResponse.Name = foundUser.Name
+		userResponse.Email = foundUser.Email
 
-		c.JSON(http.StatusOK, foundUser)
+		http.SetCookie(c.Writer, &http.Cookie{
+			Name:     "access_token",
+			Value:    token,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
+			MaxAge:   3600 * 24 * 2,
+		})
+
+		http.SetCookie(c.Writer, &http.Cookie{
+			Name:     "refresh_token",
+			Value:    refreshToken,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
+			MaxAge:   3600 * 24 * 7,
+		})
+
+		c.JSON(http.StatusOK, userResponse)
+	}
+}
+
+func Refresh() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		var user models.User
+		clientToken, erro := c.Cookie("refresh_token")
+		if erro != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("No Authorization header provided")})
+			c.Abort()
+			return
+		}
+
+		claims, err := helper.ValidateToken(clientToken)
+		if err != "" {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+			c.Abort()
+			return
+		}
+		userID := &claims.Email
+		fmt.Println(userID)
+		token, _, _ := helper.GenerateAllTokens(claims.Email, claims.Name, claims.Uid)
+
+		helper.UpdateAllTokens(token, clientToken, claims.Uid)
+		userCollection.FindOne(ctx, bson.M{"user_id": claims.Uid}).Decode(&user)
+		defer cancel()
+		http.SetCookie(c.Writer, &http.Cookie{
+			Name:     "access_token",
+			Value:    token,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
+			MaxAge:   3600 * 24 * 2,
+		})
+		c.JSON(http.StatusOK, user)
 
 	}
 }
