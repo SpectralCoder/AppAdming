@@ -204,7 +204,7 @@ func Login() gin.HandlerFunc {
 func Refresh() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-		var user models.User
+		var user models.UserResponse
 		clientToken, erro := c.Cookie("refresh_token")
 		if erro != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("No Authorization header provided")})
