@@ -309,3 +309,9 @@ func GetUser() gin.HandlerFunc {
 
 	}
 }
+
+func Health() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"success": "App is healthy"})
+	}
+}

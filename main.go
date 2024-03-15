@@ -19,7 +19,7 @@ func main() {
 	router.Use(gin.Logger())
 	// Add CORS middleware
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:5432", "http://127.0.0.1:5432", "http://192.168.1.11:5432"} // Replace with the allowed origins
+	config.AllowOrigins = []string{"http://localhost:5432", "http://127.0.0.1:5432", "http://192.168.1.11:5432", "https://app.shoppertie.com"} // Replace with the allowed origins
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 	config.AllowCredentials = true
 	router.Use(cors.New(config))
