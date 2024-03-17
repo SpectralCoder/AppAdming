@@ -5,6 +5,7 @@ import (
 	"appadming/models"
 	"appadming/responses"
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -30,24 +31,37 @@ func CreateOrganization() gin.HandlerFunc {
 			return
 		}
 
+		uidInterface, _ := c.Get("uid")
+		uid, _ := uidInterface.(string)
+
+		uObjectID, err := primitive.ObjectIDFromHex(uid)
+		if err != nil {
+			fmt.Println("Error converting hex to ObjectId:", err)
+			return
+		}
+
 		//use the validator library to validate required fields
 		if validationErr := organizationValidate.Struct(&organization); validationErr != nil {
 			c.JSON(http.StatusBadRequest, responses.CommonResponse{Status: http.StatusBadRequest, Message: "error", Data: map[string]interface{}{"data": validationErr.Error()}})
 			return
 		}
 		newOrganization := models.Orgnization{
-			Id:          organization.Id,
-			Name:        organization.Name,
-			Address:     organization.Address,
-			Phone:       organization.Phone,
-			Email:       organization.Email,
-			Created_at:  time.Time{},
-			User_id:     organization.User_id,
-			Designation: organization.Designation,
+			Id:         primitive.NewObjectID(),
+			Name:       organization.Name,
+			Address:    organization.Address,
+			Phone:      organization.Phone,
+			Email:      organization.Email,
+			Created_at: time.Time{},
 		}
 		newOrganization.Created_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 
 		result, err := organizationCollection.InsertOne(ctx, newOrganization)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, responses.CommonResponse{Status: http.StatusInternalServerError, Message: "error", Data: map[string]interface{}{"data": err.Error()}})
+			return
+		}
+
+		_, err = processCreateUserOrganization(ctx, newOrganization.Id, uObjectID, "active", "admin")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, responses.CommonResponse{Status: http.StatusInternalServerError, Message: "error", Data: map[string]interface{}{"data": err.Error()}})
 			return
@@ -97,13 +111,11 @@ func EditAOrganization() gin.HandlerFunc {
 		}
 
 		update := bson.M{
-			"Id":          organization.Id,
-			"Name":        organization.Name,
-			"Address":     organization.Address,
-			"Phone":       organization.Phone,
-			"Email":       organization.Email,
-			"User_id":     organization.User_id,
-			"Designation": organization.Designation,
+			"Id":      organization.Id,
+			"Name":    organization.Name,
+			"Address": organization.Address,
+			"Phone":   organization.Phone,
+			"Email":   organization.Email,
 		}
 		result, err := organizationCollection.UpdateOne(ctx, bson.M{"id": objId}, bson.M{"$set": update})
 		if err != nil {
