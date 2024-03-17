@@ -12,4 +12,5 @@ func OrganizationRoute(router *gin.Engine) {
 	router.PUT("/organizations/:organizationId", controllers.EditAOrganization())
 	router.DELETE("/organizations/:organizationId", controllers.DeleteAOrganization())
 	router.GET("/organizations", controllers.GetAllOrganizations())
+	router.GET("/search/organizations", controllers.GetSearchOrganization())
 }

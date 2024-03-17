@@ -193,3 +193,34 @@ func GetAllOrganizations() gin.HandlerFunc {
 		)
 	}
 }
+
+func GetSearchOrganization() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+		search := c.Query("name")
+		var organizations []models.Orgnization
+		defer cancel()
+
+		results, err := organizationCollection.Find(ctx, bson.M{"name": bson.M{"$regex": search, "$options": "i"}})
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, responses.CommonResponse{Status: http.StatusInternalServerError, Message: "error", Data: map[string]interface{}{"data": err.Error()}})
+			return
+		}
+
+		//reading from the db in an optimal way
+		defer results.Close(ctx)
+		for results.Next(ctx) {
+			var singleOrganization models.Orgnization
+			if err = results.Decode(&singleOrganization); err != nil {
+				c.JSON(http.StatusInternalServerError, responses.CommonResponse{Status: http.StatusInternalServerError, Message: "error", Data: map[string]interface{}{"data": err.Error()}})
+			}
+
+			organizations = append(organizations, singleOrganization)
+		}
+
+		c.JSON(http.StatusOK,
+			responses.CommonResponse{Status: http.StatusOK, Message: "success", Data: map[string]interface{}{"data": organizations}},
+		)
+	}
+}

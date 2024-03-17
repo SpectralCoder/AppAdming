@@ -50,6 +50,8 @@ func main() {
 	routes.SellsRoute(router)
 	routes.CustomerRoute(router)
 	routes.ProductRoute(router)
+	routes.OrganizationRoute(router)
+	routes.UserOrganizationRoutes(router)
 
 	err := router.Run("0.0.0.0:9000")
 	if err != nil {
